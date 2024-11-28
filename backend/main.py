@@ -1,3 +1,4 @@
+import re
 from pydantic import BaseModel
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,23 +26,33 @@ MODEL = os.getenv("MODEL")
 class ChatRequest(BaseModel):
     prompt: str
 
-# output_specification= "\n I want the output pointwise, so that I can directly display it in the frontend"
-async def generate_response(prompt: str):
-    print("User prompt:",prompt)
 
+async def generate_response(prompt: str):
+    print("User prompt:", prompt)
+
+    # Configure GenAI API
     genai.configure(api_key=API_KEY)
     model = genai.GenerativeModel(MODEL)
+
+    # Get AI response 
     response = model.generate_content(prompt)
-    res= response.text
-    print(res)
-    
-    return response.text
+    res = response.text
+    print("Raw Response:", res)
+
+    # Split response into points
+    points = re.split(r'\.\s+', res.strip())
+    points = [point.strip() for point in points if point.strip()]  # Clean up empty or extra spaces
+
+    print("Processed Points:", points)
+    return points
+
 
 @app.get("/")
 def home_route():
     return {"message": "Hello, World!"}
 
+
 @app.post("/chat")
 async def chat(request: ChatRequest):
-    response = await generate_response(request.prompt)
-    return {"response": response}
+    response_points = await generate_response(request.prompt)
+    return {"response": response_points}

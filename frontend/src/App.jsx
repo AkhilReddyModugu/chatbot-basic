@@ -10,11 +10,15 @@ function App() {
     e.preventDefault();
     if (!userInput.trim()) return;
 
+    // Add the user message to the messages array
     setMessages((prev) => [...prev, { role: 'user', content: userInput }]);
     setUserInput('');
 
     try {
+      // Send the user input to the backend
       const response = await axios.post('http://127.0.0.1:8000/chat', { prompt: userInput });
+
+      // Add the assistant's response (array of points) to the messages array
       setMessages((prev) => [
         ...prev,
         { role: 'assistant', content: response.data.response },
@@ -24,9 +28,10 @@ function App() {
       console.error('Error message:', error.message);
       console.error('Error code:', error.code);
 
+      // Add an error message to the messages array
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: 'An error occurred. Please try again later.' },
+        { role: 'assistant', content: ['An error occurred. Please try again later.'] },
       ]);
     }
   };
@@ -59,9 +64,21 @@ function App() {
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`p-3 rounded ${message.role === 'user' ? 'bg-info text-white' : 'bg-success text-white'}`}
+            className={`p-3 rounded ${
+              message.role === 'user' ? 'bg-info text-white' : 'bg-success text-white'
+            }`}
           >
-            {message.content}
+            {message.role === 'assistant' && Array.isArray(message.content) ? (
+              // Render assistant responses as a list
+              <ul>
+                {message.content.map((point, pointIndex) => (
+                  <li key={pointIndex}>{point}</li>
+                ))}
+              </ul>
+            ) : (
+              // Render user responses as plain text
+              <p>{message.content}</p>
+            )}
           </div>
         ))}
       </div>
