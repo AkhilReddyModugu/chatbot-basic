@@ -1,10 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { FaPaperPlane } from 'react-icons/fa';
 
 function App() {
   const [userInput, setUserInput] = useState('');
   const [messages, setMessages] = useState([]);
+  const messagesEndRef = useRef(null); // Reference to the bottom of the messages list
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom(); // Automatically scroll when messages change
+  }, [messages]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -60,7 +69,10 @@ function App() {
         </div>
       </form>
 
-      <div className="mt-4 w-100 w-md-50 d-flex flex-column gap-2">
+      <div
+        className="mt-4 w-100 w-md-50 d-flex flex-column gap-2"
+        style={{ maxHeight: '65vh', overflowY: 'auto' }} // Enable scrolling for long chats
+      >
         {messages.map((message, index) => (
           <div
             key={index}
@@ -81,6 +93,7 @@ function App() {
             )}
           </div>
         ))}
+        <div ref={messagesEndRef} /> {/* Marker for auto-scroll */}
       </div>
     </div>
   );
